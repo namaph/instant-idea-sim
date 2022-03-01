@@ -13,7 +13,7 @@ ENV LOCAL='local'
 WORKDIR /opt/app
 COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 COPY ./app.py /opt/app/
-COPY ./lib /opt/app/lib/
+COPY ./mylib /opt/app/mylib/
 
 ENV PYTHONUNBUFFERED=TRUE
 CMD ["/bin/sh", "-c", "python -m uvicorn --host 0.0.0.0 --port $PORT app:app"]
