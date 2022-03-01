@@ -1,0 +1,13 @@
+fastapi
+google-python-cloud-debugger
+google-cloud-profiler
+httptools
+matplotlib
+networkx
+numpy
+pandas
+redis
+requests
+seaborn
+uvicorn
+uvloop
