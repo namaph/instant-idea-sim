@@ -1,20 +1,34 @@
-from typing import Dict
+import logging
+from typing import Dict, Optional, Any
 
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
+import redis
 import seaborn as sns
 
-from .visualizer import Grid
+from .grid import Grid
 
-def get_neighbor(graph, label) -> Dict[int, float]:
-  res = {}
-  for i in graph[label]:
-    t, v = graph.nodes[i].values()
-    if t not in res.keys():
-      res[t] = v
-    else:
-      res[t] += v
-  return res
+def get_conn_pool(host:str, port:str, db:int):
+  return redis.ConnectionPool(
+    host=host,
+    port=port,
+    db=db
+  )
+
+class get_conn():
+  def __init__(self, pool):
+    self.r = redis.StrictRedis(connection_pool=pool)
+
+  def __call__(self) -> Optional[Any]:
+    ret = None
+    try:
+      self.r.ping()
+      ret = self.r
+    except redis.exceptions.ConnectionError as exc:
+      logging.debug("No Connection Error")
+      logging.debug(exc)
+      ret = None
+    return ret
   
 def plot_graph(graph, fname="./graph.png"):
   info = nx.get_node_attributes(graph, 'type') 
