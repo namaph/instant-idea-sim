@@ -1,5 +1,7 @@
-from typing import Optional, Any, Dict, List
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
+
 
 class Home(BaseModel):
     detail: str = Field(..., description="Message from server")
@@ -13,10 +15,8 @@ class Run(BaseModel):
 class Result(BaseModel):
     status: str = Field(..., description="Current working stage")
     model_name: Optional[str] = Field(..., description="Name of running sim")
-    hist: Optional[List[Dict[str, Any]]] = Field(
-        ...,
-        description="Result of sim, only returns when status is done"
-    )
+    hist: Optional[List[Dict[str, Any]]] = Field(..., description="Result of sim, only returns when status is done")
+
 
 class _Results(BaseModel):
     id: str = Field(..., description="session id")
@@ -24,7 +24,9 @@ class _Results(BaseModel):
     status: Optional[str] = Field(..., description="Current working stage")
     model_name: Optional[str] = Field(..., description="Name of running sim")
 
+
 Results = List[_Results]
 
+
 class DelResult(BaseModel):
-    detail: str = Field(... , description="Message from server")
+    detail: str = Field(..., description="Message from server")
