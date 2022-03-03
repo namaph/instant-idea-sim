@@ -8,7 +8,6 @@ RUN pip install -r requirements.txt
 
 FROM python:3.9-slim-buster as runner
 ENV PORT=8000
-ENV LOCAL='local'
 ENV GOOGLE_APPLICATION_CREDENTIALS="$HOME/credentials.json"
 
 WORKDIR /opt/app
