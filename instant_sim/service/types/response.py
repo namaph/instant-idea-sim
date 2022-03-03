@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 
+from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 from pydantic import BaseModel, Field
 
 
@@ -20,7 +21,7 @@ class Result(BaseModel):
 
 class _Results(BaseModel):
     id: str = Field(..., description="session id")
-    timestamp: Optional[str] = Field(..., description="Recieved time")
+    timestamp: Optional[DatetimeWithNanoseconds] = Field(..., description="Recieved time")
     status: Optional[str] = Field(..., description="Current working stage")
     model_name: Optional[str] = Field(..., description="Name of running sim")
 

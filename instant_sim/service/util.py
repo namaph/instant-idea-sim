@@ -1,32 +1,8 @@
-import logging
-from typing import Any, Optional
-
 import matplotlib.pyplot as plt
 import networkx as nx
-import redis
 import seaborn as sns
 
 from .grid import Grid
-
-
-def get_conn_pool(host: str, port: str, db: int):
-    return redis.ConnectionPool(host=host, port=port, db=db)
-
-
-class get_conn:
-    def __init__(self, pool):
-        self.r = redis.StrictRedis(connection_pool=pool)
-
-    def __call__(self) -> Optional[Any]:
-        ret = None
-        try:
-            self.r.ping()
-            ret = self.r
-        except redis.exceptions.ConnectionError as exc:
-            logging.debug("No Connection Error")
-            logging.debug(exc)
-            ret = None
-        return ret
 
 
 def plot_graph(graph, fname="./graph.png"):

@@ -1,13 +1,11 @@
-import datetime
 import logging
 import os
-import pickle
 import uuid
 
 import const as C
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from google.cloud import firestore
 from service import types as T
-from service import util as U
 from service.simulator import SimCon
 
 logger = logging.getLogger("uvicorn")
@@ -29,15 +27,7 @@ if "LOCAL" not in os.environ:
         logger.debug(exc)
 
 app = FastAPI()
-
-redis_host = os.environ.get("REDISHOST", "localhost")
-redis_port = int(os.environ.get("REDISPORT", 6379))
-
-redis_pool = U.get_conn_pool(redis_host, redis_port, 0)
-meta_pool = U.get_conn_pool(redis_host, redis_port, 1)
-
-conn = U.get_conn(redis_pool)
-mcon = U.get_conn(meta_pool)
+firestore_client = firestore.Client()
 
 
 @app.get("/", response_model=T.resp.Home)
@@ -48,15 +38,11 @@ def read_root():
 @app.get("/run/{model_name}", response_model=T.resp.Run)
 async def run_simulator(model_name: C.SimName, bg_task: BackgroundTasks):
     id = str(uuid.uuid4())
-    cli, mcl = conn(), mcon()
-    if cli is None or mcl is None:
-        raise HTTPException(status_code=500, detail="redis server not found")
+    ref = firestore_client.collection("results")
 
-    mcl.set(id, 0)
-    mcl.set(f"{id}:timestamp", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    mcl.set(f"{id}:model_name", model_name)
+    ref.document(id).set({"timestamp": firestore.SERVER_TIMESTAMP, "status": 0, "model_name": model_name, "hist": []})
 
-    bg_task.add_task(SimCon.simulate, id, C.SimFunc.__dict__[model_name], cli, mcl, logger)
+    bg_task.add_task(SimCon.simulate, id, C.SimFunc.__dict__[model_name], ref, logger)
 
     return T.resp.Run(
         model_name=model_name,
@@ -67,44 +53,35 @@ async def run_simulator(model_name: C.SimName, bg_task: BackgroundTasks):
 @app.get("/result/{id}", response_model=T.resp.Result)
 def check_result(id: str):
     msg = {-1: "error", 0: "recieved", 1: "provisioning", 2: "running", 3: "postproc", 4: "done"}
-    cli, mcl = conn(), mcon()
-    if cli is None or mcl is None:
-        raise HTTPException(status_code=500, detail="redis server not found")
 
-    if not mcl.exists(id):
+    ref = firestore_client.collection("results")
+    doc = ref.document(id).get()
+
+    if not doc.exists:
         raise HTTPException(status_code=404, detail="item_not_found")
 
-    st = int(mcl.get(id))
-    t = mcl.get(f"{id}:model_name").decode("ascii")
-    return T.resp.Result(status=msg[st], model_name=str(t), hist=pickle.loads(cli.get(id)) if st == 4 else None)
+    return T.resp.Result(status=msg[doc.get("status")], model_name=doc.get("model_name"), hist=doc.get("hist"))
 
 
 @app.get("/results", response_model=T.resp.Results)
 def get_results():
-    cli, mcl = conn(), mcon()
-    if cli is None or mcl is None:
-        raise HTTPException(status_code=500, detail="redis server not found")
-    keys = [k.decode("ascii")[:-10] for k in mcl.keys("*:timestamp")]
-    status = mcl.mget(keys)
-    timestamp = mcl.mget([f"{k}:timestamp" for k in keys])
-    mname = mcl.mget([f"{k}:model_name" for k in keys])
+    ref = firestore_client.collection("results")
 
+    query = ref.order_by("timestamp", direction=firestore.Query.DESCENDING)
+    content = query.get()
     return [
-        T.resp._Results(id=k, timestamp=t.decode("ascii"), status=int(s), model_name=m.decode("ascii"))
-        for k, s, t, m in zip(keys, status, timestamp, mname)
+        T.resp._Results(id=c.id, timestamp=c.get("timestamp"), status=c.get("status"), model_name=c.get("model_name"))
+        for c in content
     ]
 
 
 @app.delete("/result/{id}", response_model=T.resp.DelResult)
 def del_result(id: str):
-    mcl = mcon()
-    cli = conn()
+    ref = firestore_client.collection("results")
+    docs = ref.document(id)
 
-    if mcl is None or cli is None:
-        raise HTTPException(status_code=500, detail="redis server not found")
-
-    if not mcl.exists(id):
+    if not docs.get().exists:
         raise HTTPException(status_code=404, detail="item_not_found")
-    mcl.delete(*mcl.keys(f"{id}*"))
-    cli.delete(id)
+
+    docs.delete()
     return T.resp.DelResult(detail="Success")

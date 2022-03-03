@@ -1,4 +1,3 @@
-import pickle
 from typing import Callable
 
 import networkx as nx
@@ -26,17 +25,18 @@ class SimCon:
         return hist
 
     @classmethod
-    def simulate(cls, id: int, model: Callable[[T.nGraph], T.nGraph], cli, mcl, logger, init_val: int = 100):
-        mcl.set(id, 1)
+    def simulate(cls, id: str, model: Callable[[T.nGraph], T.nGraph], ref, logger, init_val: int = 100):
+        doc = ref.document(id)
+        doc.update({"status": 1})
         store = Store()
         simcon = cls(**store.cval, init_val=init_val)
-        mcl.set(id, 2)
+        doc.update({"status": 2})
         try:
             hist = simcon.run_sim(12 * 5, model)
         except Exception as exec:
             logger.error(exec)
-            mcl.set(id, -1)
+            doc.update({"status": -1})
             return
-        mcl.set(id, 3)
-        cli.set(id, pickle.dumps([nx.get_node_attributes(h, "value") for h in hist]))
-        mcl.set(id, 4)
+        doc.update({"status": 3})
+        doc.update({"hist": [nx.get_node_attributes(h, "value") for h in hist]})
+        doc.update({"status": 4})
