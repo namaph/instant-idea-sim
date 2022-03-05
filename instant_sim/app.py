@@ -10,21 +10,21 @@ from service.simulator import SimCon
 
 logger = logging.getLogger("uvicorn")
 
-if "LOCAL" not in os.environ:
-    logger.debug("LOAD google debugger")
-    try:
-        import googleclouddebugger
-        import googlecloudprofiler
+# if "LOCAL" not in os.environ:
+#     logger.debug("LOAD google debugger")
+#     try:
+#         import googleclouddebugger
+#         import googlecloudprofiler
 
-        googleclouddebugger.enable(breakpoint_enable_canary=True)
-        googlecloudprofiler.start(
-            service="python-cloud-debug",
-            service_version="1.0.1",
-            # 0-error, 1-warning, 2-info, 3-debug
-            verbose=3,
-        )
-    except (ValueError, NotImplementedError) as exc:
-        logger.debug(exc)
+#         googleclouddebugger.enable(breakpoint_enable_canary=True)
+#         googlecloudprofiler.start(
+#             service="python-cloud-debug",
+#             service_version="1.0.1",
+#             # 0-error, 1-warning, 2-info, 3-debug
+#             verbose=3,
+#         )
+#     except (ValueError, NotImplementedError) as exc:
+#         logger.debug(exc)
 
 app = FastAPI()
 firestore_client = firestore.Client()
