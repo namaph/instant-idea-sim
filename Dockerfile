@@ -13,7 +13,7 @@ ENV GOOGLE_APPLICATION_CREDENTIALS="$HOME/credentials.json"
 WORKDIR /opt/app
 COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
-COPY ./instant_sim /opt/app/
+COPY ./instant_sim /opt/app/instant_sim
 
 ENV PYTHONUNBUFFERED=TRUE
-CMD ["/bin/sh", "-c", "exec /usr/local/bin/uvicorn --host 0.0.0.0 --port $PORT app:app"]
+CMD ["/bin/sh", "-c", "exec /usr/local/bin/uvicorn --host 0.0.0.0 --port $PORT instant_sim.app:app"]

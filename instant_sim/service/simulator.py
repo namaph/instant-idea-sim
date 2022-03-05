@@ -9,13 +9,7 @@ from .datastore import Store
 class SimCon:
     init_state: T.nGraph
 
-    def __init__(
-        self,
-        labels,
-        topology,
-        values,
-        init_val: Union[int, Dict[str, int]] = 100
-    ):
+    def __init__(self, labels, topology, values, init_val: Union[int, Dict[str, int]] = 100):
         self.init_state = nx.Graph()
         for label, value in zip(labels, values):
             if isinstance(init_val, int):

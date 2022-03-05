@@ -1,21 +1,23 @@
-from enum import Enum
 import logging
 import uuid
+from enum import Enum
 
-from fastapi import BackgroundTasks, APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from google.cloud import firestore
 
+from . import const as C
 from .service import types as T
 from .service.simulator import SimCon
-from . import const as C
 
 logger = logging.getLogger("uvicorn")
 
 router = APIRouter()
 firestore_client = firestore.Client()
 
+
 class Tags(Enum):
-    model = 'model'
+    model = "model"
+
 
 @router.get("/run/{model_name}", response_model=T.resp.Run, tags=[Tags.model])
 async def run_simulator(model_name: C.SimName, bg_task: BackgroundTasks):
