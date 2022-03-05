@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Dict, Union
 
 import networkx as nx
 
@@ -9,10 +9,19 @@ from .datastore import Store
 class SimCon:
     init_state: T.nGraph
 
-    def __init__(self, labels, topology, values, init_val: int = 100):
+    def __init__(
+        self,
+        labels,
+        topology,
+        values,
+        init_val: Union[int, Dict[str, int]] = 100
+    ):
         self.init_state = nx.Graph()
         for label, value in zip(labels, values):
-            self.init_state.add_node(label, type=value, value=init_val)
+            if isinstance(init_val, int):
+                self.init_state.add_node(label, type=value, value=init_val)
+            else:
+                self.init_state.add_node(label, type=value, value=init_val[label])
         self.init_state.add_edges_from([[labels[t[0]], labels[t[1]]] for t in topology])
 
     def run_sim(self, n_step: int, f_update: Callable[[T.nGraph], T.nGraph]):
