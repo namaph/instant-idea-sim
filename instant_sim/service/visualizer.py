@@ -4,17 +4,17 @@ from typing import List
 import matplotlib.pyplot as plt
 import networkx as nx
 import seaborn as sns
-
 from google.cloud import storage
 from google.cloud.storage import Blob
 
 from . import types as T
+from .datastore import Store
 from .grid import Grid
 from .simulator import SimCon
-from .datastore import Store
 
 client_storage = storage.Client()
-bucket = client_storage.get_bucket('instant-sim-viz')
+bucket = client_storage.get_bucket("instant-sim-viz")
+
 
 class VizCon:
     graph: List[T.nGraph]
@@ -28,9 +28,16 @@ class VizCon:
         labels = {k: f"{k}:{val[k]}" for k, v in info.items()}
         cmap = {"1": "green", "2": "red", "3": "blue"}
         col = [cmap[v] for k, v in info.items()]
-        nx.draw(self.graph[pos], with_labels=True, labels=labels, font_size=10, font_color="w", node_size=500, node_color=col)
+        nx.draw(
+            self.graph[pos],
+            with_labels=True,
+            labels=labels,
+            font_size=10,
+            font_color="w",
+            node_size=500,
+            node_color=col,
+        )
         plt.savefig(fname)
-
 
     def plot_grid(self, pos, cont, fname="./grid.png"):
         grid = Grid(pos)
@@ -40,19 +47,19 @@ class VizCon:
         f.savefig(fname)
 
     @classmethod
-    def visualize(cls, id:str, ref, vref, logger, type='graph'):
+    def visualize(cls, id: str, ref, vref, logger, type="graph"):
         doc = vref.document(id)
-        doc.update({'status': 1})
-        hist = ref.document(id).get().get('hist')
+        doc.update({"status": 1})
+        hist = ref.document(id).get().get("hist")
         store = Store()
         graph = [SimCon(**store.cval, init_val=hist[-1]).init_state]
         vizcon = cls(graph)
-        doc.update({'status': 2})
+        doc.update({"status": 2})
         bio = io.BytesIO()
         vizcon.plot_graph(bio)
-        doc.update({'status': 3})
-        blob = Blob(f'{id}.png', bucket)
+        doc.update({"status": 3})
+        blob = Blob(f"{id}.png", bucket)
         blob.upload_from_string(data=bio.getvalue(), content_type="image/png")
         doc.update({"url": f"https://storage.googleapis.com/instant-sim-viz/{id}.png"})
-        doc.update({'status': 4})
-        logger.debug('Done')
+        doc.update({"status": 4})
+        logger.debug("Done")

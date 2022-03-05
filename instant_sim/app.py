@@ -1,11 +1,6 @@
-from enum import Enum
-import logging
-
 from fastapi import FastAPI
 
-from . import app_model
-from . import app_viz
-
+from . import app_model, app_viz
 from .service import types as T
 
 # import os
@@ -28,6 +23,7 @@ from .service import types as T
 app = FastAPI()
 app.include_router(app_model.router)
 app.include_router(app_viz.router)
+
 
 @app.get("/", response_model=T.resp.Home)
 def read_root():
