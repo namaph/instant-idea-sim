@@ -23,3 +23,7 @@ lint:
 .PHONY: test
 test:
 	poetry run tox -e py39
+
+.PHONY: start
+start:
+	poetry run uvicorn --host 0.0.0.0 --port 8000 instant_sim.app:app

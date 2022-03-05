@@ -21,6 +21,7 @@ seaborn = "^0.11.2"
 uvicorn = "^0.17.5"
 uvloop = "^0.16.0"
 google-cloud-firestore = "^2.3.4"
+google-cloud-storage = "^2.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0.1"
