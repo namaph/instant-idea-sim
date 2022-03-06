@@ -54,6 +54,11 @@ class SimName(str, Enum):
     biodiv = "biodiv"
 
 
+class VizName(str, Enum):
+    graph = "graph"
+    grid = "grid"
+
+
 class NodeType(int, Enum):
     primary_ind = 1
     secondary_ind = 2

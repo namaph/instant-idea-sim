@@ -31,3 +31,17 @@ Results = List[_Results]
 
 class DelResult(BaseModel):
     detail: str = Field(..., description="Message from server")
+
+
+class Visualize(BaseModel):
+    id: str = Field(..., description="target session id")
+    url: str = Field(..., description="path to image")
+    step: int = Field(..., description="target year")
+    status: Optional[str] = Field(..., description="Current working stage")
+
+
+class _Visualize(BaseModel):
+    id: str = Field(..., description="target session id")
+    url: List[str] = Field(..., description="path to image")
+    step: List[int] = Field(..., description="target year")
+    status: Optional[str] = Field(..., description="Current working stage")

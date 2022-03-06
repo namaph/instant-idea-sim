@@ -7,7 +7,7 @@ services:
     hostname: "namaph-sim"
     environment:
       - LOCAL=local
-      - GOOGLE_APPLICATION_CREDENTIALS=/opt/app/secrets/namaph-namaph-dev-a704c0c005c8.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/opt/app/secrets/namaph.json
     ports:
       - "8000:8000"
     volumes:
