@@ -70,4 +70,4 @@ def check_result(id: str):
     if not doc.exists:
         raise HTTPException(status_code=404, detail="item_not_found")
 
-    return T.resp.Visualize(id=id, status=msg[doc.get("status")], url=doc.get("url"), step=doc.get("step"))
+    return T.resp._Visualize(id=id, status=msg[doc.get("status")], url=doc.get("url"), step=doc.get("step"))

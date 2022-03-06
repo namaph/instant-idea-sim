@@ -70,7 +70,7 @@ class VizCon:
             doc.update({"status": -1})
             return
         doc.update({"status": 3})
-        fname = f"{id}_{year if year != -1 else len(hist)}_{type}.png"
+        fname = f"{id}_{year if year != -1 else len(hist)-1}_{type}.png"
         blob = Blob(fname, bucket)
         blob.upload_from_string(data=bio.getvalue(), content_type="image/png")
         doc.update({"url": firestore.ArrayUnion(["https://storage.googleapis.com/instant-sim-viz/" + fname])})
