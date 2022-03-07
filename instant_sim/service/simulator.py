@@ -28,8 +28,7 @@ class SimCon:
         return hist
 
     @classmethod
-    def simulate(cls, id: str, model: Callable[[T.nGraph], T.nGraph], ref, logger, init_val: int = 100):
-        doc = ref.document(id)
+    def simulate(cls, id: str, model: Callable[[T.nGraph], T.nGraph], doc, logger, init_val: int = 100):
         doc.update({"status": 1})
         store = Store()
         simcon = cls(**store.cval, init_val=init_val)

@@ -1,6 +1,5 @@
 import logging
 import uuid
-from enum import Enum
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from google.cloud import firestore
@@ -15,18 +14,14 @@ router = APIRouter()
 firestore_client = firestore.Client()
 
 
-class Tags(Enum):
-    model = "model"
-
-
-@router.get("/run/{model_name}", response_model=T.resp.Run, tags=[Tags.model])
+@router.get("/run/{model_name}", response_model=T.resp.Run)
 async def run_simulator(model_name: C.SimName, bg_task: BackgroundTasks):
     id = str(uuid.uuid4())
-    ref = firestore_client.collection("results")
+    doc = firestore_client.collection("results").document(id)
 
-    ref.document(id).set({"timestamp": firestore.SERVER_TIMESTAMP, "status": 0, "model_name": model_name, "hist": []})
+    doc.set({"timestamp": firestore.SERVER_TIMESTAMP, "status": 0, "model_name": model_name, "hist": []})
 
-    bg_task.add_task(SimCon.simulate, id, C.SimFunc.__dict__[model_name], ref, logger)
+    bg_task.add_task(SimCon.simulate, id, C.SimFunc.__dict__[model_name], doc, logger)
 
     return T.resp.Run(
         model_name=model_name,
@@ -34,7 +29,7 @@ async def run_simulator(model_name: C.SimName, bg_task: BackgroundTasks):
     )
 
 
-@router.get("/result/{id}", response_model=T.resp.Result, tags=[Tags.model])
+@router.get("/result/{id}", response_model=T.resp.Result)
 def check_result(id: str):
     msg = {-1: "error", 0: "recieved", 1: "provisioning", 2: "running", 3: "postproc", 4: "done"}
 
@@ -47,7 +42,7 @@ def check_result(id: str):
     return T.resp.Result(status=msg[doc.get("status")], model_name=doc.get("model_name"), hist=doc.get("hist"))
 
 
-@router.get("/results", response_model=T.resp.Results, tags=[Tags.model])
+@router.get("/results", response_model=T.resp.Results)
 def get_results():
     ref = firestore_client.collection("results")
 
@@ -59,7 +54,7 @@ def get_results():
     ]
 
 
-@router.delete("/result/{id}", response_model=T.resp.DelResult, tags=[Tags.model])
+@router.delete("/result/{id}", response_model=T.resp.DelResult)
 def del_result(id: str):
     ref = firestore_client.collection("results")
     docs = ref.document(id)

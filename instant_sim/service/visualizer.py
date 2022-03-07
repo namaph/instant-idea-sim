@@ -28,6 +28,7 @@ class VizCon:
         labels = {k: f"{k}:{val[k]}" for k, v in info.items()}
         cmap = ["green", "red", "blue"]
         col = [cmap[v] for k, v in info.items()]
+        f, a = plt.subplots(figsize=(10, 10))
         nx.draw(
             self.graph[step],
             with_labels=True,
@@ -36,8 +37,9 @@ class VizCon:
             font_color="w",
             node_size=500,
             node_color=col,
+            ax=a,
         )
-        plt.savefig(fname)
+        f.savefig(fname)
 
     def plot_grid(self, pos, cont, fname="./grid.png", step=-1):
         grid = Grid(pos)
@@ -47,14 +49,13 @@ class VizCon:
         f.savefig(fname)
 
     @classmethod
-    def visualize(cls, id: str, ref, vref, pos, year, logger, type="graph"):
-        doc = vref.document(id)
-        doc.update({"status": 1})
-        hist = ref.document(id).get().get("hist")
+    def visualize(cls, id: str, cont, vdoc, pos, year, logger, type="graph"):
+        vdoc.update({"status": 1})
+        hist = cont.get("hist")
         store = Store()
         graph = [SimCon(**store.cval, init_val=hist[year]).init_state]
         vizcon = cls(graph)
-        doc.update({"status": 2})
+        vdoc.update({"status": 2})
         bio = io.BytesIO()
         try:
             if type == "graph":
@@ -63,16 +64,16 @@ class VizCon:
                 vizcon.plot_grid(pos, "value", bio)
             else:
                 logger.error("No Viz selected")
-                doc.update({"status": -1})
+                vdoc.update({"status": -1})
                 return
         except Exception as excp:
             logger.exception(excp)
-            doc.update({"status": -1})
+            vdoc.update({"status": -1})
             return
-        doc.update({"status": 3})
-        fname = f"{id}_{year if year != -1 else len(hist)-1}_{type}.png"
+        vdoc.update({"status": 3})
+        fname = f"{id}_{year}_{type}.png"
         blob = Blob(fname, bucket)
         blob.upload_from_string(data=bio.getvalue(), content_type="image/png")
-        doc.update({"url": firestore.ArrayUnion(["https://storage.googleapis.com/instant-sim-viz/" + fname])})
-        doc.update({"status": 4})
+        vdoc.update({"url": firestore.ArrayUnion(["https://storage.googleapis.com/instant-sim-viz/" + fname])})
+        vdoc.update({"status": 4})
         logger.debug(f"Done viz: {id}")

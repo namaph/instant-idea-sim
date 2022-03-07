@@ -1,3 +1,5 @@
+from enum import Enum
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
@@ -21,17 +23,22 @@ from .service import types as T
 #     except (ValueError, NotImplementedError) as exc:
 #         logger.debug(exc)
 
+
+class Tags(Enum):
+    model = "model"
+    viz = "viz"
+
+
 app = FastAPI()
-app.include_router(app_model.router)
-app.include_router(app_viz.router)
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,   # 追記により追加
-    allow_methods=["*"],      # 追記により追加
-    allow_headers=["*"]       # 追記により追加
+    CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
 )
+
+
+app.include_router(app_model.router, tags=[Tags.model])
+app.include_router(app_viz.router, tags=[Tags.viz])
+
 
 @app.get("/", response_model=T.resp.Home)
 def read_root():

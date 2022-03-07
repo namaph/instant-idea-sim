@@ -40,7 +40,7 @@ class Visualize(BaseModel):
     status: Optional[str] = Field(..., description="Current working stage")
 
 
-class _Visualize(BaseModel):
+class VizResult(BaseModel):
     id: str = Field(..., description="target session id")
     url: List[str] = Field(..., description="path to image")
     step: List[int] = Field(..., description="target year")
