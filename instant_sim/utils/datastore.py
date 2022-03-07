@@ -3,13 +3,15 @@ from typing import List
 
 import requests
 
+from instant_sim import model
+
 from . import types as T
 
 
 @dataclass
 class Store:
     base: str
-    cont: T.store.CityioResp
+    cont: model.CityioResp
 
     def __init__(
         self,

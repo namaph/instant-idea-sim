@@ -2,13 +2,13 @@ import logging
 from typing import Callable, Dict, Union
 
 import networkx as nx
+from networkx.classes.graph import Graph
 
-from . import types as T
 from .datastore import Store
 
 
 class SimCon:
-    init_state: T.nGraph
+    init_state: Graph
     logger: logging.Logger
 
     def __init__(self, labels, topology, values, init_val: Union[int, Dict[str, int]] = 100):
@@ -21,7 +21,7 @@ class SimCon:
                 self.init_state.add_node(label, type=value, value=init_val[label])
         self.init_state.add_edges_from([[labels[t[0]], labels[t[1]]] for t in topology])
 
-    def run_sim(self, n_step: int, f_update: Callable[[T.nGraph], T.nGraph]):
+    def run_sim(self, n_step: int, f_update: Callable[[Graph], Graph]):
         state = self.init_state
         hist = [state]
         for _ in range(n_step):
@@ -31,7 +31,7 @@ class SimCon:
         return hist
 
     @classmethod
-    def simulate(cls, model: Callable[[T.nGraph], T.nGraph], doc, init_val: int = 100):
+    def simulate(cls, model: Callable[[Graph], Graph], doc, init_val: int = 100):
         doc.update({"status": 1})
         store = Store().cont
         simcon = cls(store.labels, store.topology, store.values, init_val=init_val)

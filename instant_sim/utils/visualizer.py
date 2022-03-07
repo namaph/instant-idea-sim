@@ -7,8 +7,8 @@ import networkx as nx
 import seaborn as sns
 from google.cloud import firestore, storage
 from google.cloud.storage import Blob
+from networkx.classes.graph import Graph
 
-from . import types as T
 from .datastore import Store
 from .grid import Grid
 from .simulator import SimCon
@@ -18,7 +18,7 @@ bucket = client_storage.get_bucket("instant-sim-viz")
 
 
 class VizCon:
-    graph: List[T.nGraph]
+    graph: List[Graph]
     logger: logging.Logger
 
     def __init__(self, graph):
