@@ -1,13 +1,9 @@
-import logging
-
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from google.cloud import firestore
 
 from . import const as C
 from .service import types as T
 from .service.visualizer import VizCon
-
-logger = logging.getLogger("uvicorn")
 
 router = APIRouter()
 firestore_client = firestore.Client()
@@ -43,7 +39,7 @@ def run_visualizer(id: str, viz_name: C.VizName, bg_task: BackgroundTasks, step:
             }
         )
 
-    bg_task.add_task(VizCon.visualize, id, cont, vdoc, C.pos, vstep, logger, viz_name.value)
+    bg_task.add_task(VizCon.visualize, id, cont, vdoc, C.pos, vstep, viz_name.value)
     fname = f"{id}_{vstep}_{viz_name.value}.png"
 
     return T.resp.Visualize(

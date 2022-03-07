@@ -21,7 +21,7 @@ async def run_simulator(model_name: C.SimName, bg_task: BackgroundTasks):
 
     doc.set({"timestamp": firestore.SERVER_TIMESTAMP, "status": 0, "model_name": model_name, "hist": []})
 
-    bg_task.add_task(SimCon.simulate, id, C.SimFunc.__dict__[model_name], doc, logger)
+    bg_task.add_task(SimCon.simulate, C.SimFunc.__dict__[model_name], doc)
 
     return T.resp.Run(
         model_name=model_name,
