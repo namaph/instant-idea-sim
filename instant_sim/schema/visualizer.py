@@ -1,7 +1,6 @@
-from typing import List
+from typing import Any, Dict, List
 
-from google.api_core.datetime_helpers import DatetimeWithNanoseconds
-from pydantic import BaseModel, parse_object_as
+from pydantic import BaseModel, parse_obj_as
 
 
 class VizBase(BaseModel):
@@ -16,7 +15,6 @@ class VizTaskCreate(VizBase):
 
 class VizResult(BaseModel):
     id: str
-    timestamp: DatetimeWithNanoseconds
     status: int
     step: int
     url: str
@@ -25,6 +23,6 @@ class VizResult(BaseModel):
 class VizTask(VizBase):
     vizresult: List[VizResult]
 
-    def __init__(self, **data):
-        res = parse_object_as(List[VizResult], data["vizresult"])
+    def __init__(self, **data: Dict[str, Any]):
+        res = parse_obj_as(List[VizResult], data["vizresult"])
         super().__init__(simid=data["simid"], vizresult=res)

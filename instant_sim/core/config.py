@@ -1,6 +1,6 @@
 from typing import List, Optional, Union
 
-from pydatic import AnyHttpUrl, BaseSettings, HttpUrl, validator
+from pydantic import AnyHttpUrl, BaseSettings, HttpUrl, validator
 
 
 class Settings(BaseSettings):

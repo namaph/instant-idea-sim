@@ -51,7 +51,7 @@ def get_sim_result(id: str, client: Client = Depends(deps.get_firestore)) -> Any
     )
 
 
-@router.get("/results", response_model=List[schema.SimTask])
+@router.get("/results", response_model=List[schema.SimTaskOverview])
 def get_all_sim_results(client: Client = Depends(deps.get_firestore)) -> Any:
     msg = {-1: "error", 0: "recieved", 1: "provisioning", 2: "running", 3: "postproc", 4: "done"}
     ref = client.collection("sim_res")
@@ -59,12 +59,11 @@ def get_all_sim_results(client: Client = Depends(deps.get_firestore)) -> Any:
     query = ref.order_by("timestamp", direction=Query.DESCENDING)
     content = query.get()
     return [
-        schema.SimTask(
+        schema.SimTaskOverview(
             id=cont.get("id"),
             model_name=cont.get("model_name"),
             timestamp=cont.get("timestamp"),
             status=msg[cont.get("status")],
-            result=cont.get("result"),
         )
         for cont in content
     ]

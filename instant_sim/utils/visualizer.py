@@ -5,7 +5,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import networkx as nx
 import seaborn as sns
-from google.cloud import firestore, storage
+from google.cloud import storage
 from google.cloud.storage import Blob
 from networkx.classes.graph import Graph
 
@@ -21,7 +21,7 @@ class VizCon:
     graph: List[Graph]
     logger: logging.Logger
 
-    def __init__(self, graph):
+    def __init__(self, graph: Graph):
         self.graph = [g for g in graph]
         self.logger = logging.getLogger("uvicorn")
 
@@ -52,14 +52,12 @@ class VizCon:
         f.savefig(fname)
 
     @classmethod
-    def visualize(cls, id: str, cont, vdoc, pos, year, type="graph"):
-        vdoc.update({"status": 1})
-        hist = cont.get("hist")
+    def visualize(cls, id: str, cont, pos, year, type="graph"):
+        hist = cont.get("result")
         store = Store().cont
         simcon = SimCon(store.labels, store.topology, store.values, init_val=hist[year])
         graph = [simcon.init_state]
         vizcon = cls(graph)
-        vdoc.update({"status": 2})
         bio = io.BytesIO()
         try:
             if type == "graph":
@@ -68,16 +66,11 @@ class VizCon:
                 vizcon.plot_grid(pos, "value", bio)
             else:
                 vizcon.logger.error("No Viz selected")
-                vdoc.update({"status": -1})
                 return
         except Exception as excp:
             vizcon.logger.exception(excp)
-            vdoc.update({"status": -1})
             return
-        vdoc.update({"status": 3})
         fname = f"{id}_{year}_{type}.png"
         blob = Blob(fname, bucket)
         blob.upload_from_string(data=bio.getvalue(), content_type="image/png")
-        vdoc.update({"url": firestore.ArrayUnion(["https://storage.googleapis.com/instant-sim-viz/" + fname])})
-        vdoc.update({"status": 4})
         vizcon.logger.debug(f"Done viz: {id}")

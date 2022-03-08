@@ -1,7 +1,7 @@
-from typing import List
+from typing import Any, List
 
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
-from pydantic import BaseModel, Json
+from pydantic import BaseModel
 
 
 class SimBase(BaseModel):
@@ -13,7 +13,12 @@ class SimTaskCreate(SimBase):
     pass
 
 
+class SimTaskOverview(SimBase):
+    timestamp: DatetimeWithNanoseconds
+    status: str
+
+
 class SimTask(SimBase):
     timestamp: DatetimeWithNanoseconds
     status: str
-    result: List[Json]
+    result: List[Any]
