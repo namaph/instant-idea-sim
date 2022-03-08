@@ -73,7 +73,7 @@ class NodeAttr(str, Enum):
 nGraph = NewType("nGraph", nx.classes.graph.Graph)  # type: ignore
 
 
-def f_update(graph) -> nx.classes.graph.Graph:
+def f_update(graph: nGraph) -> nGraph:
     for i in graph.nodes:
         _ = graph.nodes[i]["type"]
         _ = U.get_neighbor(graph, i)
@@ -88,8 +88,9 @@ def Biodiv(graph: nGraph) -> nGraph:
         if t != str(NodeType.primary_ind.value):
             continue
         nbr = U.get_neighbor(graph, i)
-        nbr1 = (nbr["1"] / 100) if "1" in nbr.keys() else 0
-        nbr2 = (nbr["2"] / 100) if "2" in nbr.keys() else 0
+        print(nbr)
+        nbr1 = (nbr[1] / 100) if 1 in nbr.keys() else 0
+        nbr2 = (nbr[2] / 100) if 2 in nbr.keys() else 0
         est = v * 1.1 + 5 * (nbr1 - nbr2 - 1)
         ret.nodes[i]["value"] = est
     return ret
@@ -101,33 +102,35 @@ def Economics(graph: nGraph) -> nGraph:
     val = nx.get_node_attributes(graph, "value")
     typ = nx.get_node_attributes(graph, "type")
 
-    amnt = {"1": 0.0, "2": 0.0, "3": 0.0}
-    count = {"1": 0, "2": 0, "3": 0}
+    amnt = [0, 0, 0, 0]
+    count = [0, 0, 0, 0]
     for k in val.keys():
         amnt[typ[k]] += val[k]
         count[typ[k]] += 1
 
-    r1 = amnt["1"] * 1.5
+    r1 = amnt[1] * 1.5
     r2 = (r1 / 2) / 5
     r3 = max((r1 / 5) / 2, (r2 / 3) / 2)
-    res = {"1": (r1 - r2 * 5 - r3 * 2) / count["1"], "2": r2 - r3 / count["2"], "3": r3 / count["3"]}
-
-    for k in amnt.keys():
-        amnt[k] /= count[k] if count[k] != 0 else 0
+    res = [
+        0,
+        (r1 - r2 * 5 - r3 * 2) / count[1] if count[1] != 0 else 0,
+        r2 - r3 / count[2] if count[2] != 0 else 0,
+        r3 / count[3] if count[3] != 0 else 0,
+    ]
 
     for i in graph.nodes:
         t = graph.nodes[i]["type"]
 
         nbr = U.get_neighbor(graph, i)
-        nbr1 = (nbr["1"] / 100) if "1" in nbr.keys() else 0
+        nbr1 = (nbr[1] / 100) if "1" in nbr.keys() else 0
         est = 0.0
 
         if t != str(NodeType.primary_ind.value):
-            est = res["1"] * 10 + 20 * nbr1
+            est = res[1] * 10 + 20 * nbr1
         elif t != str(NodeType.secondary_ind.value):
-            est = res["2"] * 20 + 10 * nbr1
+            est = res[2] * 20 + 10 * nbr1
         elif t != str(NodeType.tertiary_ind.value):
-            est = res["3"] * 30
+            est = res[3] * 30
 
         ret.nodes[i]["value"] = est
     return ret

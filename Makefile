@@ -8,12 +8,11 @@ run:
 clean:
 	@find . -type f -name '*.pyc' -delete
 	@find . -type d -name '__pycache__' | xargs rm -rf
-	@find . -type d -name '*.ropeproject' | xargs rm -rf
 	@rm -rf build/
 	@rm -rf dist/
-	@rm -f src/*.egg*
-	@rm -f MANIFEST
-	@rm -rf docs/build/
+	@rm -rf .mypy_cache/
+	@rm -rf .pytest_cache/
+	@rm -rf .tox/
 	@rm -f .coverage.*
 
 .PHONY: lint
@@ -26,4 +25,4 @@ test:
 
 .PHONY: start
 start:
-	poetry run uvicorn --host 0.0.0.0 --port 8000 instant_sim.app:app
+	poetry run uvicorn --host 0.0.0.0 --port 8000 instant_sim.main:app
