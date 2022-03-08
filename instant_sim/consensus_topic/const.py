@@ -89,8 +89,8 @@ def Biodiv(graph: nGraph) -> nGraph:
             continue
         nbr = U.get_neighbor(graph, i)
         print(nbr)
-        nbr1 = (nbr["1"] / 100) if "1" in nbr.keys() else 0
-        nbr2 = (nbr["2"] / 100) if "2" in nbr.keys() else 0
+        nbr1 = (nbr[1] / 100) if 1 in nbr.keys() else 0
+        nbr2 = (nbr[2] / 100) if 2 in nbr.keys() else 0
         est = v * 1.1 + 5 * (nbr1 - nbr2 - 1)
         ret.nodes[i]["value"] = est
     return ret
@@ -112,10 +112,10 @@ def Economics(graph: nGraph) -> nGraph:
     r2 = (r1 / 2) / 5
     r3 = max((r1 / 5) / 2, (r2 / 3) / 2)
     res = [
-        0, 
+        0,
         (r1 - r2 * 5 - r3 * 2) / count[1] if count[1] != 0 else 0,
         r2 - r3 / count[2] if count[2] != 0 else 0,
-        r3 / count[3] if count[3] != 0 else 0
+        r3 / count[3] if count[3] != 0 else 0,
     ]
 
     for i in graph.nodes:

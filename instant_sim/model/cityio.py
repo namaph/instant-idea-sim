@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from pydantic import BaseModel
 
@@ -16,6 +16,6 @@ class CityioResp(BaseModel):
     topology: List[Tuple[int, int]]
     values: List[int]
 
-    def __init__(self, **data) -> None:
+    def __init__(self, **data: Dict[str, Any]) -> None:
         meta = MetaCityioResp(**data["meta"])
         super().__init__(labels=data["labels"], meta=meta, topology=data["topology"], values=data["values"])
