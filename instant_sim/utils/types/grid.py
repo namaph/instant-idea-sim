@@ -2,7 +2,7 @@ from typing import Any, Dict, Iterable, List, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
-import pydantic import PositiveInt
+import pydantic import PositiveInt, Field
 
 from .simobj import SimObj
 
@@ -14,6 +14,7 @@ class Grid(SimObj):
     labels: List[str]
     attr: Dict[str, grid]
     pos: List[Tuple[coord, coord]]
+    shape: Tuple[PositiveInt, PositiveInt]
 
     cache: List[str, Any]
 
@@ -32,6 +33,7 @@ class Grid(SimObj):
         }
 
         self.attr = {}
+        self.shape = shape
         for k, v in attr.items():
             temp = np.zeros(shape, dtype=np.float_)
             for p, val in zip(pos, v):
@@ -45,7 +47,7 @@ class Grid(SimObj):
         else:
             return [{k: v[i] for k, v in self.attr.items()} for i in temp]
     
-    def get_neighbor(self, key: Union[coord, List[coord]]) -> List[np.NDArray[np.float_]]:
+    def get_neighbor(self, key: Union[coord, List[coord]]) -> List[grid]:
         temp = [key] if not isinstance(key, str) and isinstance(key[0], int) else key
         ret = []
         for i in temp:
@@ -54,5 +56,26 @@ class Grid(SimObj):
                 [i+( 0,-1), i+( 0, 0), i+( 0, 1)],
                 [i+( 1,-1), i+( 1, 0), i+( 1, 1)]
             )
-            ret.append({k: v[top] for k, v in self.attr.items()})
+            ret.append(top)
         return ret
+
+    def get_neighbor_grid(self, coef:List[float] = Field([1,1,1,1,1,1,1,1,1], min_length=9, max_length=9)) -> Dict[str, grid]:
+        if f'neighbor{coef}' not in self.cache.keys():
+            neighbor = {}
+            for k, v in self.attr.items():
+                buffer = np.zeros((self.shape[0] +2, self.shape[1]+2))
+                buffer[ :-2, :-2] += v * coef[0]
+                buffer[1:-1, :-2] += v * coef[1]
+                buffer[2:  , :-2] += v * coef[2]
+                buffer[ :-2,1:-1] += v * coef[3]
+                buffer[1:-1,1:-1] += v * coef[4]
+                buffer[2:  ,1:-1] += v * coef[5]
+                buffer[ :-2,2:  ] += v * coef[6]
+                buffer[1:-1,2:  ] += v * coef[7]
+                buffer[2:  ,2:  ] += v * coef[8]
+                neighbor['k'] = buffer
+            self.cache[f'neighbor{coef}'] = neighbor
+        else:
+            neighbor = self.cache[f'neighbor{coef}']
+
+        return grid
