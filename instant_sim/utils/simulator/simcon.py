@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 import networkx as nx
 from networkx.classes.graph import Graph
 
-from .datastore import Store
+from ..datastore import Store
 
 
 class SimCon:
