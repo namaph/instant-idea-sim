@@ -6,9 +6,10 @@ services:
     container_name: "namaph-sim"
     hostname: "namaph-sim"
     environment:
-      - LOCAL=local
       - GOOGLE_APPLICATION_CREDENTIALS=/opt/app/secrets/namaph.json
     ports:
       - "8000:8000"
     volumes:
       - ./secrets:/opt/app/secrets
+    env_file:
+      - ./.env

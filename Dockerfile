@@ -16,4 +16,4 @@ COPY --from=builder /usr/local/bin/uvicorn /usr/local/bin/uvicorn
 COPY ./instant_sim /opt/app/instant_sim
 
 ENV PYTHONUNBUFFERED=TRUE
-CMD ["/bin/sh", "-c", "exec /usr/local/bin/uvicorn --host 0.0.0.0 --port $PORT instant_sim.app:app"]
+CMD ["/bin/sh", "-c", "exec /usr/local/bin/uvicorn --host 0.0.0.0 --port $PORT instant_sim.main:app"]
