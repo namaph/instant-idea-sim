@@ -16,7 +16,7 @@ class Graph(SimObj):
     cache: Dict[str, Any]
 
     def __init__(
-        self, labels: List[str], topology: List[Tuple[PositiveInt, PositiveInt]], **attr: List[Any]
+        self, labels: List[str], topology: List[Tuple[PositiveInt, PositiveInt]], *, attr: Dict[str, List[Any]]
     ):
         assert max(sum(topology, ())) == len(
             labels
@@ -24,7 +24,7 @@ class Graph(SimObj):
 
         self.labels = labels
         self.topology = np.zeros((len(labels), len(labels)), dtype=np.int8)
-        self.attr = attr.copy()
+        self.attr = attr
         self.attr_by_element = []
 
         for t in topology:
@@ -36,7 +36,7 @@ class Graph(SimObj):
             for k, v in attr.items():
                 cont[k] = v[i]
             self.attr_by_element.append(cont)
-
+        self.cache = {}
         self.cache["label_index"] = {k: i for i, k in enumerate(labels)}
 
     def __getitem__(self, key: Union[PositiveInt, str, List[PositiveInt], List[str]]) -> List[Dict[str, Any]]:

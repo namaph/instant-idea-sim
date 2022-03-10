@@ -22,7 +22,7 @@ def create_viztask(
     id: str = Depends(deps.get_uuid),
     client: Client = Depends(deps.get_firestore),
 ) -> Any:
-    cont = client.collection("sim_res").document(simid).get()
+    cont = client.collection(settings.FIRESTORE_ROUTING.simulation_result).document(simid).get()
 
     if not cont.exists:
         raise HTTPException(status_code=404, detail="item_not_found")
@@ -31,7 +31,7 @@ def create_viztask(
 
     length = len(cont.get("result")) - 1
     st = length if step == -1 else step
-    doc = client.collection("viz_img").document(simid)
+    doc = client.collection(settings.FIRESTORE_ROUTING.visualization_result).document(simid)
 
     if not doc.get().exists:
         doc.set(model.VizTask(simid=simid, vizresult=[]).dict())
@@ -51,7 +51,7 @@ def create_viztask(
 
 @router.get("/vizresult/{simid}", response_model=schema.VizTask)
 def check_result(simid: str, client: Client = Depends(deps.get_firestore)) -> Any:
-    doc = client.collection("viz_img").document(simid).get()
+    doc = client.collection(settings.FIRESTORE_ROUTING.visualization_result).document(simid).get()
 
     if not doc.exists:
         raise HTTPException(status_code=404, detail="item_not_found")

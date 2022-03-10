@@ -8,6 +8,7 @@ from google.cloud.firestore_v1.transforms import Sentinel
 from instant_sim import consensus_topic as C
 from instant_sim import model, schema
 from instant_sim.api import deps
+from instant_sim.core.config import settings
 from instant_sim.utils.simulator import SimCon
 
 router = APIRouter()
@@ -21,7 +22,7 @@ async def create_simtask(
     client: Client = Depends(deps.get_firestore),
     time: Sentinel = Depends(deps.get_servertime),
 ) -> Any:
-    doc = client.collection("sim_res").document(id)
+    doc = client.collection().document(id)
 
     doc.set(model.SimTask(id=id, timestamp=time, status=0, model_name=model_name, result=[]).dict())
 
@@ -37,7 +38,7 @@ async def create_simtask(
 def get_sim_result(id: str, client: Client = Depends(deps.get_firestore)) -> Any:
     msg = {-1: "error", 0: "recieved", 1: "provisioning", 2: "running", 3: "postproc", 4: "done"}
 
-    cont = client.collection("sim_res").document(id).get()
+    cont = client.collection(settings.FIRESTORE_ROUTING.simulation_result).document(id).get()
 
     if not cont.exists:
         raise HTTPException(status_code=404, detail="item_not_found")
@@ -54,7 +55,7 @@ def get_sim_result(id: str, client: Client = Depends(deps.get_firestore)) -> Any
 @router.get("/results", response_model=List[schema.SimTaskOverview])
 def get_all_sim_results(client: Client = Depends(deps.get_firestore)) -> Any:
     msg = {-1: "error", 0: "recieved", 1: "provisioning", 2: "running", 3: "postproc", 4: "done"}
-    ref = client.collection("sim_res")
+    ref = client.collection(settings.FIRESTORE_ROUTING.simulation_result)
 
     query = ref.order_by("timestamp", direction=Query.DESCENDING)
     content = query.get()
@@ -71,7 +72,7 @@ def get_all_sim_results(client: Client = Depends(deps.get_firestore)) -> Any:
 
 @router.delete("/result/{id}", response_model=schema.Msg)
 def del_result(id: str, client: Client = Depends(deps.get_firestore)) -> Any:
-    doc = client.collection("sim_res").document(id)
+    doc = client.collection(settings.FIRESTORE_ROUTING.simulation_result).document(id)
 
     if not doc.get().exists:
         raise HTTPException(status_code=404, detail="item_not_found")

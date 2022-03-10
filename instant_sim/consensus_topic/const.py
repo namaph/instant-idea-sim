@@ -14,6 +14,7 @@ from . import util as U
 # s2 ... Town section, J~R
 # s3 ... Town section, S~U
 
+gridshape = (512, 512)
 be = 0
 la = 512
 ud = 56
@@ -46,7 +47,8 @@ pos = {
     "U": (s3, (ma + 270, ma + 420)),
 }
 
-init_val = 100
+init_val = [100] * len(pos.keys())
+period = 12 * 5
 
 
 class SimName(str, Enum):

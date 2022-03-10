@@ -23,7 +23,8 @@ class Grid(SimObj):
         labels: List[str],
         pos: List[Tuple[coord, coord]],
         shape: Tuple[PositiveInt, PositiveInt],
-        **attr: Dict[str, List[Any]],
+        *,
+        attr: Dict[str, List[Any]],
     ):
         assert len(labels) == len(pos)
         self.labels = labels

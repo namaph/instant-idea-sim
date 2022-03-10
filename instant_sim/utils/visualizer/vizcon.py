@@ -1,85 +1,74 @@
 import io
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any, Optional, cast
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as np
 import seaborn as sns
 from google.cloud import storage
+from google.cloud.firestore_v1.document import DocumentReference
 from google.cloud.storage import Blob
-from networkx.classes.graph import Graph
+from pydantic import PositiveInt
 
-from instant_sim.utils.datastore import Store
-from instant_sim.utils.simulator import SimCon
-from instant_sim.utils.types import Grid
+from instant_sim.utils.types import Graph, Grid, SimData, SimDataList
 
 client_storage = storage.Client()
 bucket = client_storage.get_bucket("instant-sim-viz")
 
 
 class VizCon:
-    graph: List[Graph]
+    content: SimData
+    dtype: SimDataList
     logger: logging.Logger
 
-    def __init__(self, graph: Graph):
-        self.graph = [g for g in graph]
-        self.logger = logging.getLogger("uvicorn")
+    def __init__(self, content: SimData, logger: Optional[logging.Logger] = None):
+        self.content = content
+        self.logger = logging.getLogger("uvicorn") if logger is None else logger
+        if isinstance(content, Grid):
+            self.dtype = SimDataList.Grid
+        elif isinstance(content, Graph):
+            self.dtype = SimDataList.Graph
+        else:
+            raise TypeError(f"Class: {type(content)} doesn't match to SimData: Grid/Graph")
 
-    def plot_graph(self, fname: Any = "./graph.png", step: int = -1) -> None:
-        info = nx.get_node_attributes(self.graph[step], "type")
-        val = nx.get_node_attributes(self.graph[step], "value")
-        labels = {k: f"{k}:{val[k]}" for k, v in info.items()}
-        cmap = ["black", "green", "red", "blue"]
-        col = [cmap[v] for k, v in info.items()]
-        f, a = plt.subplots(figsize=(10, 10))
-        nx.draw(
-            self.graph[step],
-            with_labels=True,
-            labels=labels,
-            font_size=10,
-            font_color="w",
-            node_size=500,
-            node_color=col,
-            ax=a,
-        )
-        f.savefig(fname)
-
-    def plot_grid(
-        self,
-        pos: Dict[str, Tuple[Tuple[int, int], Tuple[int, int]]],
-        cont: Any,
-        fname: Any = "./grid.png",
-        step: int = -1,
-    ) -> None:
-        grid = Grid(pos)
-        grid.set_attr(nx.get_node_attributes(self.graph[step], cont).values())
-        f, a = plt.subplots(figsize=(10, 10))
-        sns.heatmap(grid.grid, ax=a, cbar=False)
-        f.savefig(fname)
+    def plot(self, fname: Any, attr: str) -> None:
+        if self.dtype == SimDataList.Graph:
+            cont = cast(Graph, self.content)
+            row, col = np.where(cont.topology == 1)
+            edges = zip(row.tolist(), col.tolist())
+            gr = nx.Graph()
+            gr.add_edges_from(edges)
+            f, a = plt.subplots(figsize=(10, 10))
+            nx.draw(
+                gr,
+                node_size=500,
+                labels=cont.attr[attr],
+                with_labels=True,
+                font_size=10,
+                font_color="w",
+                node_color=col,
+                ax=a,
+            )
+            f.savefig(fname)
+        elif self.dtype == SimDataList.Grid:
+            content = cast(Grid, self.content)
+            target = content.attr[attr]
+            f, a = plt.subplots(figsize=(10, 10))
+            sns.heatmap(target, ax=a, cbar=False)
+            f.savefig(fname)
+        else:
+            RuntimeError(f"Invalid dtype, expects SimData, got: {self.dtype}")
 
     @classmethod
     def visualize(
-        cls,
-        id: str,
-        cont: Any,
-        pos: Dict[str, Tuple[Tuple[int, int], Tuple[int, int]]],
-        step: int,
-        type: str = "graph",
+        cls, id: str, sdoc: DocumentReference, vdoc: DocumentReference, step: PositiveInt, attr: str
     ) -> None:
-        hist = cont.get("result")
-        store = Store().cont
-        simcon = SimCon(store.labels, store.topology, store.values, init_val=hist[step])
-        graph = [simcon.init_state]
-        vizcon = cls(graph)
-        bio = io.BytesIO()
+        target: SimData = sdoc.get().get("result")[step]
+        vizcon = cls(target)
         try:
-            if type == "graph":
-                vizcon.plot_graph(bio)
-            elif type == "grid":
-                vizcon.plot_grid(pos, "value", bio)
-            else:
-                vizcon.logger.error("No Viz selected")
-                return
+            bio = io.BytesIO()
+            vizcon.plot(bio, attr)
         except Exception as excp:
             vizcon.logger.exception(excp)
             return

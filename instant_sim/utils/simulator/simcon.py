@@ -1,14 +1,16 @@
 import logging
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
-import networkx as nx
-from networkx.classes.graph import Graph
+from google.cloud.firestore_v1.document import DocumentReference
+from pydantic import PositiveInt
 
-from ..datastore import Store
+from instant_sim import consensus_topic as C
+from instant_sim.utils.datastore import Store
+from instant_sim.utils.types import Graph, Grid, SimData, SimDataList
 
 
 class SimCon:
-    init_state: Graph
+    state: SimData
     logger: logging.Logger
 
     def __init__(
@@ -16,19 +18,18 @@ class SimCon:
         labels: List[str],
         topology: List[Tuple[int, int]],
         values: List[int],
-        init_val: Union[int, Dict[str, int]] = 100,
+        dtype: SimDataList,
+        logger: Optional[logging.Logger] = None,
     ):
-        self.logger = logging.getLogger("uvicorn")
-        self.init_state = nx.Graph()
-        for label, value in zip(labels, values):
-            if isinstance(init_val, int):
-                self.init_state.add_node(label, type=value, value=init_val)
-            else:
-                self.init_state.add_node(label, type=value, value=init_val[label])
-        self.init_state.add_edges_from([[labels[t[0]], labels[t[1]]] for t in topology])
+        self.logger = logging.getLogger("uvicorn") if logger is None else logger
+        self.dtype = dtype
+        if dtype == SimDataList.Graph:
+            self.state = Graph(labels, topology, land_type=values, value=C.init_val)  # type: ignore
+        if dtype == SimDataList.Grid:
+            self.state = Grid(labels, C.pos, C.gridshape, land_type=values, value=C.init_val)  # type: ignore
 
-    def run_sim(self, n_step: int, f_update: Callable[[Graph], Graph]) -> List[Any]:
-        state = self.init_state
+    def run_sim(self, n_step: PositiveInt, f_update: Callable[[SimData], SimData]) -> List[SimData]:
+        state = self.state
         hist = [state]
         for _ in range(n_step):
             state = f_update(state)
@@ -37,17 +38,17 @@ class SimCon:
         return hist
 
     @classmethod
-    def simulate(cls, model: Callable[[Graph], Graph], doc: Any, init_val: int = 100) -> None:
+    def simulate(cls, model: Callable[[SimData], SimData], doc: DocumentReference, dtype: SimDataList) -> None:
         doc.update({"status": 1})
         store = Store().cont
-        simcon = cls(store.labels, store.topology, store.values, init_val=init_val)
+        simcon = cls(store.labels, store.topology, store.values, dtype)
         doc.update({"status": 2})
         try:
-            hist = simcon.run_sim(12 * 5, model)
+            result = simcon.run_sim(C.period, model)
         except Exception as exec:
             simcon.logger.exception(exec)
             doc.update({"status": -1})
             return
         doc.update({"status": 3})
-        doc.update({"result": [nx.get_node_attributes(h, "value") for h in hist]})
+        doc.update({"result": [r.dict() for r in result]})
         doc.update({"status": 4})

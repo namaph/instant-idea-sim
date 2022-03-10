@@ -1,6 +1,16 @@
 from typing import List, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseSettings, HttpUrl, validator
+from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, HttpUrl, root_validator, validator
+
+
+class _FirestoreRoutiung(BaseModel):
+    simulation_result: str = Field(..., min_length=1)
+    visualization_result: str = Field(..., min_length=1)
+
+    @root_validator
+    def check_uniqueness(cls, values):  # type: ignore
+        sres, vres = values.get("simulation_result"), values.get("visualization_result")
+        assert sres != vres, "Fields must be unique"
 
 
 class Settings(BaseSettings):
@@ -14,6 +24,11 @@ class Settings(BaseSettings):
 
     CITYIO_ROOT: str = "https://cityio.media.mit.edu/api/table/namaph/"
     GCS_ROOT: str = "https://storage.googleapis.com/instant-sim-viz/"
+
+    FIRESTORE_ROUTING: _FirestoreRoutiung = _FirestoreRoutiung(
+        simulation_result="sim_res", visualization_result="viz_img"
+    )
+
     USE_GCP_DEBUGGER: bool
     USE_GCP_PROFILER: bool
 
