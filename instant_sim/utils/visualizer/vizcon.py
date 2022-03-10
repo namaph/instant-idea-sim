@@ -10,8 +10,8 @@ from google.cloud.storage import Blob
 from networkx.classes.graph import Graph
 
 from instant_sim.utils.datastore import Store
-from instant_sim.utils.types import Grid
 from instant_sim.utils.simulator import SimCon
+from instant_sim.utils.types import Grid
 
 client_storage = storage.Client()
 bucket = client_storage.get_bucket("instant-sim-viz")
